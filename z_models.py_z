@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column  # type: ignore
 from sqlalchemy.sql.expression import text  # type: ignore
 from database import Base
 
-
+#TODO test remove this line
 
 class IkvKenmDim(Base):
     __tablename__ = "ikv_tikv_kenm_dim"
