@@ -1,0 +1,118 @@
+-- Create user if not exists (should already exist via POSTGRES_USER, but ensure)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'fdsuser') THEN
+    CREATE USER fdsuser WITH PASSWORD 'jadzia01';
+  END IF;
+END $$;
+
+-- Ensure the 'fds' database exists (should already exist via POSTGRES_DB)
+-- Set ownership of the 'public' schema to fdsuser
+ALTER SCHEMA public OWNER TO fdsuser;
+
+GRANT ALL PRIVILEGES ON DATABASE fds TO fdsuser;
+
+-- Ensure search_path is set for the user
+ALTER USER fdsuser SET search_path TO public;
+
+\connect fds
+-- SET search_path TO public;
+-- public.ikv_tink_verh_van_baan_dm definition
+
+-- Drop table
+
+-- DROP TABLE public.ikv_tink_verh_van_baan_dm;
+
+CREATE TABLE public.ikv_tink_verh_van_baan_dm (
+	ikv_id int4 NOT NULL,
+	bsn varchar NOT NULL,
+	jaarmaand_begindatum date NOT NULL,
+	aantctrcturenpwk_mnd int4 NOT NULL,
+	aantverlu_mnd int4 NOT NULL,
+	cao_kenmerk int4 NOT NULL,
+	ikv_indicatie int4 NOT NULL,
+	ctrctln_mnd int4 NOT NULL,
+	datum_begin_iko date NOT NULL,
+	datum_begin_ikv date NOT NULL,
+	datum_einde_iko date NOT NULL,
+	datum_einde_ikv date NOT NULL,
+	duur_iko int4 NOT NULL,
+	gebdat_la date NOT NULL,
+	gesl_la varchar(5) NOT NULL,
+	ikv_kenmerk int4 NOT NULL,
+	lhnr varchar(255) NOT NULL,
+	lnlbph_mnd int4 NOT NULL,
+	lnsv_mnd int4 NOT NULL
+);
+
+-- public.ikv_tikv_ind_dim definition
+
+-- Drop table
+
+-- DROP TABLE public.ikv_tikv_ind_dim;
+
+CREATE TABLE public.ikv_tikv_ind_dim (
+	ikv_ind_key serial4 NOT NULL,
+	indarbovonbeptd varchar(255) NOT NULL,
+	indjrurennrm varchar(1) NOT NULL,
+	indoprov varchar(1) NOT NULL,
+	indpubaannonbeptd varchar(1) NOT NULL,
+	indschriftarbov varchar(1) NOT NULL,
+	indwao varchar(1) NOT NULL,
+	indww varchar(1) NOT NULL,
+	indzw varchar(1) NOT NULL,
+	CONSTRAINT ikv_tikv_ind_dim_pkey PRIMARY KEY (ikv_ind_key)
+);
+
+-- public.ikv_tikv_kenm_dim definition
+
+-- Drop table
+
+-- DROP TABLE public.ikv_tikv_kenm_dim;
+
+CREATE TABLE public.ikv_tikv_kenm_dim (
+	ikv_kenm_key serial4 NOT NULL,
+	cdaard numeric(10) NOT NULL,
+	lbtab varchar(3) NOT NULL,
+	srtiv varchar(2) NOT NULL,
+	CONSTRAINT ikv_tikv_kenm_dim_pkey PRIMARY KEY (ikv_kenm_key)
+);
+
+-- public.ikv_tink_verh_van_baan_dm foreign keys
+
+ALTER TABLE public.ikv_tink_verh_van_baan_dm ADD CONSTRAINT ikv_tink_verh_van_baan_dm_ikv_indicatie_fkey FOREIGN KEY (ikv_indicatie) REFERENCES public.ikv_tikv_ind_dim(ikv_ind_key) ON DELETE CASCADE;
+ALTER TABLE public.ikv_tink_verh_van_baan_dm ADD CONSTRAINT ikv_tink_verh_van_baan_dm_ikv_kenmerk_fkey FOREIGN KEY (ikv_kenmerk) REFERENCES public.ikv_tikv_kenm_dim(ikv_kenm_key) ON DELETE CASCADE;
+
+insert into public.ikv_tikv_kenm_dim (ikv_kenm_key,cdaard,lbtab,srtiv) values (284362,1,'012','15');
+insert into public.ikv_tikv_kenm_dim (ikv_kenm_key,cdaard,lbtab,srtiv) values (312537,1,'012','15');
+insert into public.ikv_tikv_kenm_dim (ikv_kenm_key,cdaard,lbtab,srtiv) values (313202,1,'012','15');
+insert into public.ikv_tikv_kenm_dim (ikv_kenm_key,cdaard,lbtab,srtiv) values (313445,1,'015','15');
+insert into public.ikv_tikv_kenm_dim (ikv_kenm_key,cdaard,lbtab,srtiv) values (365301,1,'012','15');
+
+
+insert into public.ikv_tikv_ind_dim (ikv_ind_key,indarbovonbeptd,indjrurennrm,indoprov,indpubaannonbeptd,indschriftarbov,indwao,indww,indzw) values (4109,'#','#','#','#','#','j','j','j');
+insert into public.ikv_tikv_ind_dim (ikv_ind_key,indarbovonbeptd,indjrurennrm,indoprov,indpubaannonbeptd,indschriftarbov,indwao,indww,indzw) values (4117,'#','#','#','#','#','j','j','j');
+insert into public.ikv_tikv_ind_dim (ikv_ind_key,indarbovonbeptd,indjrurennrm,indoprov,indpubaannonbeptd,indschriftarbov,indwao,indww,indzw) values (5216,'n','#','n','#','j','j','j','j');
+insert into public.ikv_tikv_ind_dim (ikv_ind_key,indarbovonbeptd,indjrurennrm,indoprov,indpubaannonbeptd,indschriftarbov,indwao,indww,indzw) values (5318,'j','#','n','#','j','j','j','j');
+insert into public.ikv_tikv_ind_dim (ikv_ind_key,indarbovonbeptd,indjrurennrm,indoprov,indpubaannonbeptd,indschriftarbov,indwao,indww,indzw) values (5358,'j','#','n','#','j','j','j','j');
+
+INSERT INTO public.ikv_tink_verh_van_baan_dm (ikv_id,bsn,jaarmaand_begindatum,aantctrcturenpwk_mnd,aantverlu_mnd,cao_kenmerk,ikv_indicatie,ctrctln_mnd,datum_begin_iko,datum_begin_ikv,datum_einde_iko,datum_einde_ikv,duur_iko,gebdat_la,gesl_la,ikv_kenmerk,lhnr,lnlbph_mnd,lnsv_mnd) VALUES
+	 (1,'999990019','2024-11-01',40,173,10105,5318,3869,'2024-11-01','2011-07-01','2024-11-30','9999-12-31',30,'1985-10-28','1',313202,'111111111L01',4278,4278),
+	 (1,'999990019','2024-12-01',40,147,10105,5318,3869,'2024-12-01','2011-07-01','2024-12-31','9999-12-31',31,'1985-10-28','1',365301,'111111111L01',3592,3592),
+	 (1,'999990019','2025-01-01',40,53,10105,5318,4031,'2025-01-01','2011-07-01','2025-01-31','9999-12-31',31,'1985-10-28','1',365301,'111111111L01',1602,1602),
+	 (1,'999990019','2025-02-01',40,173,10105,5318,4031,'2025-02-01','2011-07-01','2025-02-28','9999-12-31',28,'1985-10-28','1',313202,'111111111L01',4401,4401),
+	 (1,'999990019','2025-03-01',40,93,10105,5318,4031,'2025-03-01','2011-07-01','2025-03-31','9999-12-31',31,'1985-10-28','1',365301,'111111111L01',2543,2543),
+	 (1,'999990019','2025-04-01',40,133,10105,5318,4031,'2025-04-01','2011-07-01','2025-04-30','9999-12-31',30,'1985-10-28','1',365301,'111111111L01',3472,3472),
+	 (1,'999990019','2025-05-01',40,93,10105,5318,4031,'2025-05-01','2011-07-01','2025-05-31','9999-12-31',31,'1985-10-28','1',365301,'111111111L01',2543,2543),
+	 (1,'999990019','2025-06-01',40,173,10129,5358,4152,'2025-06-01','2011-07-01','2025-06-30','9999-12-31',30,'1985-10-28','1',313202,'111111111L01',8084,8084),
+	 (2,'999990135','2024-11-01',28,121,10129,5358,1772,'2024-11-01','2023-02-15','2024-11-30','9999-12-31',30,'1987-12-05','2',312537,'222222222L01',1733,1733),
+	 (2,'999990135','2024-12-01',28,102,10129,5358,1772,'2024-12-01','2023-02-15','2024-12-31','9999-12-31',31,'1987-12-05','2',312537,'222222222L01',1450,1450);
+INSERT INTO public.ikv_tink_verh_van_baan_dm (ikv_id,bsn,jaarmaand_begindatum,aantctrcturenpwk_mnd,aantverlu_mnd,cao_kenmerk,ikv_indicatie,ctrctln_mnd,datum_begin_iko,datum_begin_ikv,datum_einde_iko,datum_einde_ikv,duur_iko,gebdat_la,gesl_la,ikv_kenmerk,lhnr,lnlbph_mnd,lnsv_mnd) VALUES
+	 (2,'999990135','2025-01-01',28,121,10129,5358,1932,'2025-01-01','2023-02-15','2025-01-31','9999-12-31',31,'1987-12-05','2',312537,'222222222L01',1885,1885),
+	 (2,'999990135','2025-02-01',28,121,10129,5358,1932,'2025-02-01','2023-02-15','2025-02-28','9999-12-31',28,'1987-12-05','2',312537,'222222222L01',1885,1885),
+	 (2,'999990135','2025-03-01',28,121,10129,5358,1932,'2025-03-01','2023-02-15','2025-03-31','9999-12-31',31,'1987-12-05','2',312537,'222222222L01',1885,1885),
+	 (2,'999990135','2025-04-01',28,121,10129,5358,1932,'2025-04-01','2023-02-15','2025-04-30','9999-12-31',30,'1987-12-05','2',312537,'222222222L01',1885,1885),
+	 (2,'999990135','2025-05-01',28,121,10129,5358,1932,'2025-05-01','2023-02-15','2025-05-31','9999-12-31',31,'1987-12-05','2',312537,'222222222L01',3528,3528),
+	 (2,'999990135','2025-06-01',28,122,10214,5358,1932,'2025-06-01','2023-02-15','2025-06-30','9999-12-31',30,'1987-12-05','2',312537,'222222222L01',1885,1885);
+
+

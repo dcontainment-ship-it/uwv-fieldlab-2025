@@ -1,0 +1,56 @@
+# Top-level HTTP block for method mapping
+http {
+    map $request_method $method_allowed {
+        default       1;   # allow all methods by default
+        PROPFIND      0;
+        ACL           0;
+        MKCALENDAR    0;
+        LINK          0;
+        BREW          0;
+        WHEN          0;
+    }
+
+    # HTTP server: redirect to HTTPS, but block disallowed methods first
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name manolo-s.online;
+
+        # Reject disallowed methods
+        if ($method_allowed = 0) {
+            return 405;
+        }
+
+        # Redirect everything else to HTTPS
+        return 301 https://$host$request_uri;
+    }
+
+    # HTTPS server: main proxy to FastAPI
+    server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        server_name manolo-s.online;
+
+        # SSL certs (adjust paths)
+        ssl_certificate /etc/letsencrypt/live/manolo-s.online/fullchain1.pem;
+        ssl_certificate_key /etc/letsencrypt/live/manolo-s.online/privkey1.pem;
+
+        location / {
+            # Reject disallowed methods
+            if ($method_allowed = 0) {
+                return 405;
+            }
+
+            # Proxy to FastAPI
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $http_host;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_redirect off;
+        }
+    }
+}

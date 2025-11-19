@@ -1,0 +1,61 @@
+services:
+  api:
+    build: .
+    ports: 
+    - 8000:8000
+    env_file:
+      - ./.env
+    # expose:
+      # - 8000 #expose makes FastAPI accessible only inside Docker network.
+    volumes:
+      - ./logs:/var/log/my_app  
+    networks:
+      backend:
+    #command: gunicorn -w 3 -k uvicorn.workers.Uvicornworker main:app --host 0.0.0.0 --port 8000 --log-config log_config.json
+    depends_on:
+      - postgres
+
+  # nginx:
+    # image: nginx:latest
+    # container_name: nginx-proxy
+    # ports:
+    #   - 80:80       
+    #   - 443:443   
+    # env_file:
+    #   - ./.env
+    # # environment:
+    #   # SSL_CERT_PATH: ${SSL_CERT_PATH}
+    #   # SSL_KEY_PATH: ${SSL_KEY_PATH}  
+    # networks:
+    #   backend:
+    # volumes:
+    #   - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+    #   - ./certs:/etc/ssl:ro
+    #   - ./logs:/var/log/my_app  
+    # depends_on:
+    #   - api
+    # entrypoint: ["/bin/sh", "-c", "envsubst '$$SSL_CERT_PATH $$SSL_KEY_PATH' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"]   
+
+  postgres:
+    image: postgres
+    env_file:
+      - ./.env
+    networks:
+      backend:
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+      - /home/mschotsb/projecten/uwv-fds-fieldlab/sql:/docker-entrypoint-initdb.d
+      - ./log_postgres:/var/log/postgresql 
+      - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf 
+    environment:
+      POSTGRES_INITDB_WALDIR: /var/lib/postgresql/data/pg_wal
+      TZ: "Europe/Amsterdam"
+    command: ["postgres", "-c", "config_file=/var/lib/postgresql/data/postgresql.conf"]
+      
+      
+
+volumes:
+  postgres-db: {}
+
+networks:
+  backend:

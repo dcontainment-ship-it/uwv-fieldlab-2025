@@ -1,0 +1,90 @@
+worker_processes auto;
+
+error_log  /var/log/my_app/nginx-error.jsonl;
+
+events {
+    worker_connections 1024;
+    }
+
+http {
+
+    log_format json_combined escape=json
+        '{'
+        '"time":"$time_iso8601",'
+        '"remote_addr":"$remote_addr",'
+        '"method":"$request_method",'
+        '"uri":"$request_uri",'
+        '"status":$status,'
+        '"body_bytes_sent":$body_bytes_sent,'
+        '"referer":"$http_referer",'
+        '"user_agent":"$http_user_agent",'
+        '"request_time":$request_time,'
+        '"upstream_time":"$upstream_response_time",'
+        '"upstream_addr":"$upstream_addr"'
+        '}';
+
+    access_log /var/log/my_app/nginx-access.jsonl json_combined;
+
+    # Limit allowed methods
+    map $request_method $blocked {
+        default 0;
+        PROPFIND 1;
+        ACL 1;
+        MKCALENDAR 1;
+        LINK 1;
+        BREW 1;
+        WHEN 1;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+        
+        
+        # Reject blocked methods
+        if ($blocked) {
+            return 405;
+        }
+        # Redirect http traffic to https
+        return 301 https://$host$request_uri;
+    }
+
+    server{
+        listen 443 ssl;
+
+        ssl_certificate $SSL_CERT_PATH;
+        ssl_certificate_key $SSL_KEY_PATH;
+
+        location / {
+
+            if ($blocked) {
+                return 405;
+            }
+
+            # Forward requests to FastAPI container
+                        # Remove any client-supplied headers
+            proxy_set_header X-Forwarded-For "";
+            proxy_set_header X-Real-IP "";
+
+            # Set trusted headers
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # WebSocket support
+            # proxy_http_version 1.1;
+            # proxy_set_header Upgrade $http_upgrade;
+            # proxy_set_header Connection "upgrade";
+
+            # Timeouts & body limits
+            client_max_body_size 0M;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+
+            # Forward requests to FastAPI container
+            proxy_pass http://api:8000;
+        }
+    }
+}               

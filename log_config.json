@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+     "simple": {
+      "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s: %(message)s",
+      "datefmt": "%Y-%m-%dT%H:%M:%S%z"
+    },
+    "json": {
+      "()": "mylogger.MyJSONFormatter",
+      "fmt_keys": {
+        "time": "asctime",
+        "level": "levelname",
+        "message": "message",
+        "logger": "name",
+        "module": "module",
+        "function": "funcName",
+        "line": "lineno",
+        "thread_name": "threadName",
+        "process_name": "processName",
+        "remote_addr": "remote_addr",
+        "method": "method",
+        "uri": "uri",
+        "status": "status",
+        "request_time": "request_time",
+        "upstream_time": "upstream_response_time",
+        "upstream_addr": "upstream_addr"
+      }
+    }
+  },
+  "handlers": {
+    "file_app": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "filename": "/var/log/my_app/fastapi-app.jsonl",
+      "maxBytes": 10485760,
+      "backupCount": 5,
+      "encoding": "utf8"
+    },
+    "file_access": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "INFO",
+      "formatter": "json",
+      "filename": "/var/log/my_app/fastapi-access.jsonl",
+      "maxBytes": 10485760,
+      "backupCount": 5,
+      "encoding": "utf8"
+    },
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "stream": "ext://sys.stdout"
+    }
+  },
+  "root": {
+    "level": "DEBUG",
+    "handlers": [
+      "file_app",
+      "console"
+    ]
+  },
+  "loggers": {
+    "uvicorn": {
+      "level": "INFO",
+      "handlers": [
+        "file_app",
+        "console"
+      ],
+      "propagate": false
+    },
+    "uvicorn.error": {
+      "level": "INFO",
+      "handlers": [
+        "file_app",
+        "console"
+      ],
+      "propagate": false
+    },
+    "uvicorn.access": {
+      "level": "INFO",
+      "handlers": [
+        "file_access",
+        "console"
+      ],
+      "propagate": false
+    },
+    "gunicorn.error": {
+      "level": "INFO",
+      "handlers": [
+        "file_app",
+        "console"
+      ],
+      "propagate": false
+    },
+    "gunicorn.access": {
+      "level": "INFO",
+      "handlers": [
+        "file_access",
+        "console"
+      ],
+      "propagate": false
+    }
+  }
+}
